@@ -20,7 +20,10 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.template.st.StTemplateRenderer;
+import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
@@ -32,6 +35,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+
+import static baize.code.java.code.DocumentCode.GOODS_ID;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +56,10 @@ public class AIServiceImpl implements AIService {
     private RedisChatMemory redisChatMemory;
     @Value("${session.key}")
     private String key;
+    @Value("${retrieval.threshold}")
+    private Double similarityThreshold;
+    @Value("${retrieval.number}")
+    private Integer topK;
     @Override
     public void HumanOperation(ChatMessage chatMessage, Session session){
         String content = chatClient.prompt()
@@ -92,8 +101,16 @@ public class AIServiceImpl implements AIService {
                 .advisors(MessageChatMemoryAdvisor
                         .builder(redisChatMemory)
                         .conversationId(chatMessage.getSessionId().toString())
-                        .build())
-                        .stream().content();
+                        .build(), RetrievalAugmentationAdvisor.builder()
+                        .order(1)
+                        .documentRetriever(VectorStoreDocumentRetriever.builder()
+                                .similarityThreshold(similarityThreshold)
+                                .topK(topK)
+                                .filterExpression(new Filter.Expression(Filter.ExpressionType.EQ,
+                                        new Filter.Key(GOODS_ID.toString()),
+                                        new Filter.Value(chatMessage.getGoodsId().toString())))
+                                        .build())
+                        .build()).stream().content();
 
 
         stream.toIterable().forEach(
