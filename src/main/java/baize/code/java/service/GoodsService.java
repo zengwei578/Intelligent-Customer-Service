@@ -10,4 +10,6 @@ public interface GoodsService extends IService<Goods> {
     Boolean update(Goods goods);
 
     Goods detailById(Integer id);
+
+    void delete(Integer id);
 }

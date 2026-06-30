@@ -10,10 +10,11 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class AIConfig {
     // 项目中只有dashscopeChatModel所以这里可以直接使用接口
-    private final ChatModel chatModel;
+    private final ChatModel openAiChatModel;
 
+    private final ChatModel dashscopeChatModel;
     @Bean
     public ChatClient chatClient() {
-        return ChatClient.builder(chatModel).build();
+        return ChatClient.builder(dashscopeChatModel).build();
     }
 }

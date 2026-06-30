@@ -18,4 +18,6 @@ public interface SessionLogService extends IService<SessionLog> {
     Result<Integer> userGetUnreadMessageCount(Integer sessionId);
 
     Result<Integer> ctGetUnreadMessageCount(Integer sessionId);
+
+    List<SessionLog> getConversationMessagesIsTen(Integer sessionId);
 }

@@ -1,7 +1,7 @@
 spring:
   data:
     redis:
-      host: 192.168.100.128
+      host: localhost
       port: 6379
       password:
   datasource:
@@ -14,7 +14,7 @@ spring:
       chat:
         options:
           model: qwen-plus # 聊天模型
-      api-key:  # 密钥
+      api-key: sk-59440f2bb2bedee316d7c12624a8bbf41c894429ee9f4d2911dbf172e5bf3d21  # 密钥
       embedding:
         options:
           model: text-embedding-v4 # 向量模型
@@ -41,6 +41,7 @@ spring:
         # cosine: 余弦相似度，适合文本相似度计算
         metric-type: cosine
         initialize-schema: true  # 是否自动创建 schema
+
   profiles:
     active: local
 session: # 会话的redis设置

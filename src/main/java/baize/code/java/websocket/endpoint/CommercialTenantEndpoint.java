@@ -2,10 +2,18 @@ package baize.code.java.websocket.endpoint;
 
 import baize.code.java.config.ChatMessageCoder;
 import baize.code.java.entity.SessionLog;
+import baize.code.java.mapper.SessionLogMapper;
+import baize.code.java.mapper.SessionMapper;
+import baize.code.java.service.SessionService;
+import baize.code.java.utils.SessionFind;
 import baize.code.java.websocket.message.ChatMessage;
+import cn.hutool.core.util.ObjectUtil;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 // TODO:006
@@ -19,6 +27,14 @@ public class CommercialTenantEndpoint implements WebSocketEndpoint {
     private Session session;
     private Integer ctId;
 
+
+    private static SessionLogMapper sessionLogMapper;
+    private static SessionFind sessionFind;
+    @Autowired
+    public void setSessionLogMapper(SessionLogMapper sessionLogMapper,SessionFind sessionFind){
+        CommercialTenantEndpoint.sessionLogMapper=sessionLogMapper;
+        CommercialTenantEndpoint.sessionFind=sessionFind;
+    }
     @OnOpen
     public void onOpen(Session session, @PathParam("ctId") Integer ctId) {
         this.session = session;
@@ -35,7 +51,17 @@ public class CommercialTenantEndpoint implements WebSocketEndpoint {
 
     @OnMessage
     public void onMessage(ChatMessage message, Session session) throws EncodeException, IOException {
-
+        message.setType(getEndpointType());
+        sessionLogMapper.insert(SessionLog.builder()
+                        .sessionId(message.getSessionId())
+                .type(message.getType())
+                .content(message.getMessage())
+                .readStatus(SessionLog.ReadStatus.UNREAD)
+                .build());
+        UserServiceEndpoint userServiceEndpoint = sessionFind.getUserEndpointById(message.getSessionId());
+        if(!ObjectUtil.isEmpty(userServiceEndpoint)){
+            userServiceEndpoint.sendMessage(message);
+        }
     }
 
     @OnError
@@ -64,7 +90,7 @@ public class CommercialTenantEndpoint implements WebSocketEndpoint {
         return SessionLog.Type.COMMERCIAL_TENANT;
     }
 
-    public static CommercialTenantEndpoint findEndPoint(Integer userId) {
-        return commercialTenantEndpointConcurrentEndpointPool.get(userId);
+    public static CommercialTenantEndpoint findEndPoint(Integer ctId) {
+        return commercialTenantEndpointConcurrentEndpointPool.get(ctId);
     }
 }

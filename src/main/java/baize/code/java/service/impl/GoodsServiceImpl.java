@@ -9,11 +9,14 @@ import baize.code.java.entity.GoodsDocument;
 import baize.code.java.mapper.GoodsDocumentMapper;
 import baize.code.java.mapper.GoodsMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.ai.vectorstore.milvus.MilvusVectorStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static baize.code.java.code.DocumentCode.GOODS_ID;
 
 @Service
 @RequiredArgsConstructor
@@ -53,5 +56,19 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
                 .eq(GoodsDocument::getGoodsId, id));
         goods.setDocuments(documents);
         return goods;
+    }
+
+    @Override
+    public void delete(Integer goodsId) {
+        //根据商品id删除商品文档
+        int result = goodsDocumentMapper.delete(new LambdaQueryWrapper<GoodsDocument>()
+                .eq(GoodsDocument::getGoodsId, goodsId));
+        if(result<=0){
+            throw new IllegalArgumentException("删除失败");
+        }
+        //根据商品id删除对应的向量数据
+        vectorStore.delete(new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key(GOODS_ID), new Filter.Value(goodsId)));
+
+        removeById(goodsId);
     }
 }

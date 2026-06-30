@@ -2,6 +2,7 @@ package baize.code.java.service.impl;
 
 import baize.code.java.service.SessionLogService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import baize.code.java.code.ResultCode;
 import baize.code.java.common.Result;
@@ -97,5 +98,14 @@ public class SessionLogServiceImpl extends ServiceImpl<SessionLogMapper, Session
                         .eq(SessionLog::getType, SessionLog.Type.USER)
                         .count().intValue()
         );
+    }
+
+    @Override
+    public List<SessionLog> getConversationMessagesIsTen(Integer sessionId) {
+        List<SessionLog> sessionLogList = lambdaQuery().eq(SessionLog::getSessionId, sessionId)
+                .orderByDesc(SessionLog::getTimestamp)
+                .page(new Page<>(1,memoryLength))
+                .getRecords();
+        return sessionLogList;
     }
 }

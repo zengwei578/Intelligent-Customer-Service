@@ -20,6 +20,7 @@ public class GoodsController {
      */
     @PostMapping("/add")
     public Result<?> add(@RequestBody Goods goods) {
+
         return Result.success(ResultCode.ADD_SUCCESS, goodsService.add(goods));
     }
 
@@ -29,7 +30,8 @@ public class GoodsController {
      */
     @DeleteMapping("/delete")
     public Result<?> delete(@RequestParam Integer id) {
-        return null;
+        goodsService.delete(id);
+        return Result.success(ResultCode.DELETE_SUCCESS);
     }
 
     /**
